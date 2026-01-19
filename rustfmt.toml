@@ -1,0 +1,31 @@
+# Rustfmt Configuration
+# Ensures consistent formatting across the project using only stable features
+
+# Edition
+edition = "2021"
+
+# Width settings
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+
+# Import settings
+reorder_imports = true
+reorder_modules = true
+
+# Function and struct formatting
+force_explicit_abi = true
+
+# Line ending - CRITICAL for CI consistency
+newline_style = "Unix"
+
+# Remove nested paths and use shorthands
+use_try_shorthand = false
+use_field_init_shorthand = true
+
+# Match block formatting
+match_block_trailing_comma = false
+
+# Advanced formatting options
+merge_derives = true
+use_small_heuristics = "Default"

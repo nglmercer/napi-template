@@ -1,0 +1,31 @@
+[package]
+name = "napi_template"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+name = "napi_template"
+
+[package.metadata.napi]
+targets = [
+  "x86_64-pc-windows-msvc",
+  "i686-pc-windows-msvc",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu"
+]
+
+[dependencies]
+napi = { version = "3.8.2", features = ["napi4", "serde-json", "async"] }
+napi-derive = "3.5.1"
+chrono = "0.4"
+tokio = { version = "1", features = ["full"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = "z"

@@ -1,0 +1,254 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Diagnostic reports
+.[rT]
+.duckdb
+*.duckdb
+*.duckdb.wal
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools
+coverage
+*.lcov
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# TypeScript cache
+*.tsbuildinfo
+.cache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+*.js
+
+# Bun Stuff
+.bun-cache/
+bun.lockb
+
+# napi-rs build output
+dist/
+!.dist
+*.node
+/native/target/
+
+# Rust build output
+target/
+*.dylib
+*.dll
+*.so
+*.pdb
+*.o
+*.obj
+*.lib
+*.exp
+*.ilk
+
+# Test results
+test-results/
+playwright-report/
+coverage/
+
+# Editor
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+*.log.*
+*.debug
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*
+!.env.example
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# Lock files (but keep bun.lock for package management)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cargo
+Cargo.lock
+.cargo/
+
+# Additional
+*.map
+*.min.*
+*.d.ts
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Diagnostic reports
+.[rT]
+.duckdb
+*.duckdb
+*.duckdb.wal
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools
+coverage
+*.lcov
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# TypeScript cache
+*.tsbuildinfo
+.cache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+*.js
+
+# Bun Stuff
+.bun-cache/
+bun.lockb
+
+# napi-rs build output
+dist/
+!.dist
+*.node
+/native/target/
+
+# Rust build output
+target/
+*.dylib
+*.dll
+*.so
+*.pdb
+*.o
+*.obj
+*.lib
+*.exp
+*.ilk
+
+# Test results
+test-results/
+playwright-report/
+coverage/
+
+# Editor
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+*.log.*
+*.debug
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*
+!.env.example
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# Lock files (but keep bun.lock for package management)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lock
+
+# Cargo
+Cargo.lock
+.cargo/
+
+# Additional
+*.map
+*.min.*

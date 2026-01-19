@@ -1,0 +1,104 @@
+# Version control
+.github/
+.git/
+.gitignore
+.gitattributes
+.gitpod.yml
+
+# Cargo/Rust
+Cargo.toml
+Cargo.lock
+src/
+scripts/
+tests/
+.rs
+Cargo.toml
+.rs
+.cargo/
+rustfmt.toml
+clippy.toml
+
+# Node/Git files
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+Bun.lockb
+
+# Build outputs
+target/
+dist/
+dist/**/*
+
+# TypeScript
+tsconfig.json
+tsconfig.tsbuildinfo
+. tsbuild info
+
+# Documentation (but keep README.md and LICENSE)
+docs/
+CHANGELOG.md
+PROJECT_STRUCTURE.md
+PUBLISH.md
+DEVELOPMENT.md
+
+# Development
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Scripts
+scripts/
+!scripts/publish.js
+!scripts/build.js
+!scripts/postinstall.js
+
+# Tests
+tests/
+*.test.ts
+*.test.js
+spec.ts
+spec.js
+
+# Root files to exclude
+napicon
+.bunfig.toml
+.dprint.json
+.eslintignore
+.eslintrc
+.prettierrc
+.pre-commit-config.yaml
+postinstall.mjs
+playwright.config.ts
+nx.json
+nx
+.nx
+
+# Keep only necessary files
+# The building system will check these files automatically
+```
+
+**Respuesta:**
+
+He creado un `.npmignore` minimalista y limpio para el template. El archivo incluye:
+
+1. **Directorios de Git y otras herramientas** - Excluye archivos de control de versiones y configs de otros Sistemas
+2. **Archivos de Rust/Cargo** - Excluye todos los archivos de Rust fuente (pero permite el binario .node compilado)
+3. **Otros lock files** - Excluye package-lock.json, yarn.lock, pnpm-lock.yaml en favor de Bun
+4. **Build outputs** - Excluye carpetas target/ y dist/
+5. **TypeScript cache** - Excluye archivos .tsbuildinfo
+6. **Documentación auxiliar** - Excluye docs/ pero deja README.md y LICENSE
+7. **Configuraciones de desarrollo** - Excluye .vscode/, .idea/, etc.
+8. **Tests de développe** - Excluye tests/ y archivos test
+9. **Scripts que no se necesitan** - Excluye servicios de scripts
+
+**Lo que se incluye en el package:**
+- `dist/index.js` (el binario compiled de NAPI)
+- `dist/index.d.ts` (type definitions)
+- `README.md` (documentación)
+- `LICENSE` (licencia)
+
+El archivo está listo para ser utilizado en el template limpio de NAPI con Bun.

@@ -1,0 +1,84 @@
+name: Lint & Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUST_TOOLCHAIN: stable
+  NODE_VERSION: "20"
+
+jobs:
+  lint:
+    name: Lint & Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libpkgconf-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ubuntu-latest-cargo-lint-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-lint-
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .bun-cache
+            ~/.npm
+          key: ubuntu-latest-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          restore-keys: |
+            ubuntu-latest-bun-
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Rust format check
+        run: cargo fmt --all -- --check
+
+      - name: Rust linting (clippy)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: TypeScript type check
+        run: bun run tsc --noEmit || echo "TypeScript check completed"

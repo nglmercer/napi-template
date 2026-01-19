@@ -39,14 +39,12 @@
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "build:watch": "napi build --watch",
-    "clean": "napi clean && cargo clean && rm -rf dist/",
+    "clean": "napi clean && cargo clean",
     "test": "bun test",
     "dev": "bun run --watch examples/dev.ts",
     "type-check": "tsc --noEmit",
     "format": "bun run --filter ./examples --filter ./scripts format",
-    "lint": "rustup run stable cargo clippy -- -D warnings",
-    "docs:generate": "bun run scripts/generate-docs.ts"
+    "lint": "rustup run stable cargo clippy -- -D warnings"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",

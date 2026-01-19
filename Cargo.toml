@@ -18,10 +18,13 @@ targets = [
 ]
 
 [dependencies]
-napi = { version = "3.8.2", features = ["napi4", "serde-json", "async"] }
+napi = { version = "3.8.2", features = ["napi9", "async"] }
 napi-derive = "3.5.1"
 chrono = "0.4"
 tokio = { version = "1", features = ["full"] }
+
+[build-dependencies]
+napi-build = "2"
 
 [profile.release]
 lto = true

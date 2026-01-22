@@ -54,11 +54,6 @@
   "peerDependencies": {
     "bun": ">=1.0.0"
   },
-  "optionalDependencies": {
-    "@napi-rs/cli-platform-linux": "^3.5.1",
-    "@napi-rs/cli-platform-darwin": "^3.5.1",
-    "@napi-rs/cli-platform-windows": "^3.5.1"
-  },
   "napi": {
     "binaryName": "template",
     "targets": [

@@ -63,7 +63,7 @@ jobs:
           if [ "${{ matrix.cross }}" = "true" ]; then
             bun run napi build --platform --release --target ${{ matrix.target }} --cross-compile
           else
-            bun run napi build --platform --release --target ${{ matrix.target }}
+            bun run napi build --platform --release
           fi
       - uses: actions/upload-artifact@v4
         with:

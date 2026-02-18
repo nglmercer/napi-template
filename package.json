@@ -32,7 +32,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
-    "dist/",
+    "index.js",
+    "index.d.ts",
+    "*.node",
     "README.md",
     "LICENSE"
   ],

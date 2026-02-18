@@ -51,7 +51,7 @@ jobs:
         with:
           key: publish-${{ matrix.target }}
       - if: matrix.cross
-        uses: cross-rs/cross@v0.2.5
+        uses: cross-rs/cross@v0.2.1
         with:
           target: aarch64-unknown-linux-gnu
       - uses: oven-sh/setup-bun@v1

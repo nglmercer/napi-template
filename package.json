@@ -45,8 +45,8 @@
     "type-check": "tsc --noEmit",
     "format": "bun run --filter ./examples --filter ./scripts format",
     "lint": "rustup run stable cargo clippy -- -D warnings",
-    "download-assets": "node scripts/download-release-assets.mjs",
-    "download-assets:help": "node scripts/download-release-assets.mjs --help"
+    "download-assets": "bun run scripts/download-release-assets.ts",
+    "download-assets:help": "bun run scripts/download-release-assets.ts -- --help"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
@@ -66,5 +66,8 @@
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu"
     ]
+  },
+  "dependencies": {
+    "commander": "^14.0.3"
   }
 }

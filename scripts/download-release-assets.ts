@@ -12,7 +12,6 @@
  *   --token   GitHub PAT (optional, increases rate limit)
  *   --out     Output directory (default: "./downloads")
  *   --filter  Regex to filter assets (e.g. "\.node$")
- *   --help    Show help
  *
  * Examples:
  *   GITHUB_OWNER=nglmercer GITHUB_REPO=napi-template node scripts/download-release-assets.mjs
@@ -23,40 +22,58 @@ import fs from "node:fs";
 import path from "node:path";
 import https from "node:https";
 import { URL } from "node:url";
+import { program } from "commander";
 
-const args = process.argv.slice(2);
-if (args.includes("--help") || args.includes("-h")) {
-  console.log(`Usage: node scripts/download-release-assets.mjs [options]
-
-Options:
-  --owner   GitHub owner/org (or GITHUB_OWNER env)
-  --repo    Repository name (or GITHUB_REPO env)
-  --tag     Release tag (default: "latest")
-  --token   GitHub PAT (optional)
-  --out     Output directory (default: "./downloads")
-  --filter  Regex to filter assets
-  --help    Show this help`);
-  process.exit(0);
+interface HttpResponse {
+  status: number;
+  body: string;
 }
 
-function parseArgs() {
-  const opts = {};
-  for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith("--")) {
-      opts[args[i].slice(2)] = args[++i];
-    }
-  }
-  return {
-    owner: opts.owner || process.env.GITHUB_OWNER || "",
-    repo: opts.repo || process.env.GITHUB_REPO || "",
-    tag: opts.tag || process.env.RELEASE_TAG || "latest",
-    token: opts.token || process.env.GITHUB_TOKEN || "",
-    out: opts.out || process.env.OUTPUT_DIR || "./downloads",
-    filter: opts.filter || "",
-  };
+interface GitHubAsset {
+  name: string;
+  size: number;
+  url: string;
 }
 
-function formatBytes(b) {
+interface GitHubRelease {
+  tag_name: string;
+  assets: GitHubAsset[];
+}
+
+interface Config {
+  owner: string;
+  repo: string;
+  tag: string;
+  token: string;
+  out: string;
+  filter: string;
+}
+
+program
+  .name("download-release-assets")
+  .description("Download all assets from a GitHub release")
+  .option("--owner <owner>", "GitHub owner/org (or GITHUB_OWNER env)")
+  .option("--repo <repo>", "Repository name (or GITHUB_REPO env)")
+  .option("--tag <tag>", "Release tag", "latest")
+  .option("--token <token>", "GitHub PAT (optional, increases rate limit)")
+  .option("--out <dir>", "Output directory", "./downloads")
+  .option("--filter <regex>", "Regex to filter assets (e.g. '\\.node$')")
+  .helpOption("-h, --help", "Show help");
+
+program.parse();
+
+const opts = program.opts();
+
+const cfg: Config = {
+  owner: opts.owner || process.env.GITHUB_OWNER || "",
+  repo: opts.repo || process.env.GITHUB_REPO || "",
+  tag: opts.tag || process.env.RELEASE_TAG || "latest",
+  token: opts.token || process.env.GITHUB_TOKEN || "",
+  out: opts.out || process.env.OUTPUT_DIR || "./downloads",
+  filter: opts.filter || "",
+};
+
+function formatBytes(b: number | undefined): string {
   if (!b) return "0 B";
   const k = 1024;
   const s = ["B", "KB", "MB", "GB"];
@@ -64,7 +81,7 @@ function formatBytes(b) {
   return `${(b / Math.pow(k, i)).toFixed(1)} ${s[i]}`;
 }
 
-function httpGet(url, headers = {}) {
+function httpGet(url: string, headers: Record<string, string> = {}): Promise<HttpResponse> {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     https
@@ -80,21 +97,25 @@ function httpGet(url, headers = {}) {
           },
         },
         (res) => {
-          if ([301, 302, 307].includes(res.statusCode)) {
-            return resolve(httpGet(res.headers.location, headers));
+          const statusCode = res.statusCode ?? 0;
+          if ([301, 302, 307].includes(statusCode)) {
+            const location = res.headers.location;
+            if (location) {
+              return resolve(httpGet(location, headers));
+            }
           }
           let data = "";
           res.on("data", (c) => (data += c));
-          res.on("end", () => resolve({ status: res.statusCode, body: data }));
+          res.on("end", () => resolve({ status: statusCode, body: data }));
         }
       )
       .on("error", reject);
   });
 }
 
-function downloadFile(url, dest, headers = {}) {
+function downloadFile(url: string, dest: string, headers: Record<string, string> = {}): Promise<number> {
   return new Promise((resolve, reject) => {
-    const doReq = (reqUrl) => {
+    const doReq = (reqUrl: string) => {
       const u = new URL(reqUrl);
       https
         .get(
@@ -108,11 +129,15 @@ function downloadFile(url, dest, headers = {}) {
             },
           },
           (res) => {
-            if ([301, 302, 307].includes(res.statusCode)) {
-              return doReq(res.headers.location);
+            const statusCode = res.statusCode ?? 0;
+            if ([301, 302, 307].includes(statusCode)) {
+              const location = res.headers.location;
+              if (location) {
+                return doReq(location);
+              }
             }
-            if (res.statusCode !== 200) {
-              return reject(new Error(`HTTP ${res.statusCode}`));
+            if (statusCode !== 200) {
+              return reject(new Error(`HTTP ${statusCode}`));
             }
             const total = parseInt(res.headers["content-length"] || "0", 10);
             let received = 0;
@@ -141,15 +166,14 @@ function downloadFile(url, dest, headers = {}) {
   });
 }
 
-async function main() {
-  const cfg = parseArgs();
-
+async function main(): Promise<void> {
   if (!cfg.owner || !cfg.repo) {
     console.error("Error: --owner and --repo are required (or set GITHUB_OWNER/GITHUB_REPO env)");
+    program.help();
     process.exit(1);
   }
 
-  const auth = cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {};
+  const auth: Record<string, string> = cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {};
 
   console.log(`Repository: ${cfg.owner}/${cfg.repo}`);
   console.log(`Tag: ${cfg.tag}`);
@@ -171,8 +195,8 @@ async function main() {
     process.exit(1);
   }
 
-  const release = JSON.parse(res.body);
-  let assets = release.assets || [];
+  const release: GitHubRelease = JSON.parse(res.body);
+  let assets: GitHubAsset[] = release.assets || [];
 
   if (assets.length === 0) {
     console.log("No assets found in this release.");
@@ -181,7 +205,7 @@ async function main() {
 
   if (cfg.filter) {
     const re = new RegExp(cfg.filter, "i");
-    assets = assets.filter((a) => re.test(a.name));
+    assets = assets.filter((a: GitHubAsset) => re.test(a.name));
     console.log(`Filter applied: ${assets.length} asset(s) match`);
   }
 
@@ -205,11 +229,12 @@ async function main() {
     }
 
     try {
-      await downloadFile(asset.url, dest, { ...auth, Accept: "application/octet-stream" });
+      await downloadFile(asset.url, dest, { ...auth, Accept: "application/octet-stream" } as Record<string, string>);
       console.log(`  Saved: ${dest}`);
       success++;
     } catch (e) {
-      console.error(`  Failed: ${e.message}`);
+      const error = e as Error;
+      console.error(`  Failed: ${error.message}`);
       if (fs.existsSync(dest)) fs.unlinkSync(dest);
       failed++;
     }
@@ -222,6 +247,7 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(`Error: ${e.message}`);
+  const error = e as Error;
+  console.error(`Error: ${error.message}`);
   process.exit(1);
 });

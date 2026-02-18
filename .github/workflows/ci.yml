@@ -58,9 +58,7 @@ jobs:
         with:
           key: ${{ matrix.target }}
       - if: matrix.cross
-        uses: cross-rs/cross@v0.2.1
-        with:
-          target: aarch64-unknown-linux-gnu
+        run: cargo install cross
       - uses: oven-sh/setup-bun@v1
       - run: bun install
       - shell: bash

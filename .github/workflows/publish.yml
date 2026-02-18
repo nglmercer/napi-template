@@ -1,0 +1,133 @@
+# Publish - GitHub Packages and GitHub Release
+# Change LIB_NAME and BINARY_NAME to adapt for other projects
+
+name: Publish
+
+env:
+  LIB_NAME: napi-template-bun
+  BINARY_NAME: template
+  CARGO_TERM_COLOR: always
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g. v1.2.3)"
+        required: true
+        default: "v1.0.0"
+      prerelease:
+        description: "Pre-release?"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, cross: false }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, cross: true }
+          - { target: x86_64-apple-darwin, os: macos-13, cross: false }
+          - { target: aarch64-apple-darwin, os: macos-latest, cross: false }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, cross: false }
+          - { target: i686-pc-windows-msvc, os: windows-latest, cross: false }
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: publish-${{ matrix.target }}
+      - if: matrix.cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - shell: bash
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            bun run napi build --platform --release --target ${{ matrix.target }} --cross-compile
+          else
+            bun run napi build --platform --release --target ${{ matrix.target }}
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: |
+            ${{ env.BINARY_NAME }}.*.node
+            ${{ env.BINARY_NAME }}.node
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-npm:
+    name: Publish to GitHub Packages
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - name: Configure npm for GitHub Packages
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          cat > .npmrc << EOF
+          @${OWNER}:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
+          always-auth=true
+          EOF
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            if (!pkg.name.startsWith('@')) pkg.name = '@${OWNER}/' + pkg.name;
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+      - run: bun install
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: version
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: release-assets/
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "${{ env.LIB_NAME }} ${{ steps.version.outputs.tag }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' || contains(steps.version.outputs.tag, '-') }}
+          files: release-assets/*.node
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,79 @@
+# CI - Build and Test
+# Change LIB_NAME and BINARY_NAME to adapt for other projects
+
+name: CI
+
+env:
+  LIB_NAME: napi-template-bun
+  BINARY_NAME: template
+  CARGO_TERM_COLOR: always
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run type-check
+
+  build:
+    name: Build (${{ matrix.target }})
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, cross: false }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest, cross: true }
+          - { target: x86_64-apple-darwin, os: macos-13, cross: false }
+          - { target: aarch64-apple-darwin, os: macos-latest, cross: false }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, cross: false }
+          - { target: i686-pc-windows-msvc, os: windows-latest, cross: false }
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - if: matrix.cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - shell: bash
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            bun run napi build --platform --release --target ${{ matrix.target }} --cross-compile
+          else
+            bun run napi build --platform --release --target ${{ matrix.target }}
+          fi
+      - if: "!matrix.cross"
+        run: bun test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BINARY_NAME }}-${{ matrix.target }}
+          path: |
+            ${{ env.BINARY_NAME }}.*.node
+            ${{ env.BINARY_NAME }}.node
+          if-no-files-found: error

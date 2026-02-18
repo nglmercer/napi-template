@@ -29,8 +29,8 @@
     "bun": ">=1.0.0"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "files": [
     "dist/",
     "README.md",

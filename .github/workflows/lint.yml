@@ -74,6 +74,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Build native module
+        run: bun run build
+
       - name: Rust format check
         run: cargo fmt --all -- --check
 
@@ -81,4 +84,4 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: TypeScript type check
-        run: bun run tsc --noEmit || echo "TypeScript check completed"
+        run: bun run type-check
